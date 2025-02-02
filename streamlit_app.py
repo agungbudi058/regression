@@ -129,17 +129,17 @@ if uploaded_file is not None:
             print(f"\nShapiro-Wilk Test (Normality) p-value: {shapiro_p:.4f}")
             print("--> Residuals are normal" if shapiro_p > 0.05 else "--> Residuals are NOT normal!")
 
-# 4. Multicollinearity: VIF (Variance Inflation Factor)
-vif_data = pd.DataFrame()
-vif_data["Feature"] = X.columns
-vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
-print("\nVariance Inflation Factor (VIF):")
-print(vif_data)
-print("--> VIF < 10: No multicollinearity | VIF ≥ 10: Severe multicollinearity")
+            # 4. Multicollinearity: VIF (Variance Inflation Factor)
+            vif_data = pd.DataFrame()
+            vif_data["Feature"] = X.columns
+            vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+            print("\nVariance Inflation Factor (VIF):")
+            print(vif_data)
+            print("--> VIF < 10: No multicollinearity | VIF ≥ 10: Severe multicollinearity")
 
-# 5. Independence: Durbin-Watson Statistic
-print(f"\nDurbin-Watson Statistic: {model.durbinwatson:.2f}")
-print("--> 1.5 < DW < 2.5: No autocorrelation" if 1.5 < model.durbinwatson < 2.5 else "--> Autocorrelation detected!")
+            # 5. Independence: Durbin-Watson Statistic
+            print(f"\nDurbin-Watson Statistic: {model.durbinwatson:.2f}")
+            print("--> 1.5 < DW < 2.5: No autocorrelation" if 1.5 < model.durbinwatson < 2.5 else "--> Autocorrelation detected!")
 
 else:
     st.info("Please upload a CSV file to begin")
