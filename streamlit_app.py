@@ -9,14 +9,14 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import matplotlib.pyplot as plt
-import seaborn as sns
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
 from scipy.stats import shapiro
+from statsmodels.stats.diagnostic import het_goldfeldquandt
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-
-st.title("SPSS-style Regression Analysis (No sklearn) 📊")
+st.title("Complete Regression Analysis with Assumption Checks 📊")
 
 # File upload
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
@@ -40,7 +40,7 @@ if uploaded_file is not None:
             degree = st.slider("Polynomial Degree", 1, 3, 1)
             formula += f" + {' + '.join([f'np.power({f}, {d})' for f in features for d in range(2, degree+1)])}"
 
-        # Train-test split (manual implementation)
+        # Train-test split
         test_size = st.slider("Test Size", 0.1, 0.5, 0.2)
         np.random.seed(42)
         test_mask = np.random.rand(len(df)) < test_size
@@ -73,76 +73,72 @@ if uploaded_file is not None:
             }).join(conf_int)
             st.dataframe(coeff_table.style.format("{:.4f}"))
 
-            # Collinearity diagnostics
-            st.subheader("Collinearity Statistics")
+            # Assumption Checks
+            st.subheader("Assumption Checks")
+            residuals = model.resid
+            fitted_values = model.predict(train_df)
+
+            # 1. Linearity: Actual vs. Predicted Plot
+            st.write("**1. Linearity Check: Actual vs. Predicted**")
+            fig1, ax1 = plt.subplots(figsize=(10, 6))
+            sns.scatterplot(x=fitted_values, y=train_df[target], ax=ax1)
+            ax1.set_xlabel("Predicted Values")
+            ax1.set_ylabel("Actual Values")
+            st.pyplot(fig1)
+
+            # 2. Homoscedasticity: Residuals vs. Predicted Plot
+            st.write("**2. Homoscedasticity Check: Residuals vs. Predicted**")
+            fig2, ax2 = plt.subplots(figsize=(10, 6))
+            sns.scatterplot(x=fitted_values, y=residuals, ax=ax2)
+            ax2.axhline(y=0, color='r', linestyle='--')
+            ax2.set_xlabel("Predicted Values")
+            ax2.set_ylabel("Residuals")
+            st.pyplot(fig2)
+
+            # Goldfeld-Quandt Test
+            _, gq_p, _ = het_goldfeldquandt(residuals, model.model.exog)
+            st.write(f"**Goldfeld-Quandt Test p-value:** {gq_p:.4f}")
+            st.write("✅ Homoscedasticity holds (constant variance)" if gq_p > 0.05 
+                    else "❌ Heteroscedasticity detected!")
+
+            # 3. Normality of Residuals
+            st.write("**3. Normality Check**")
+            fig3, ax3 = plt.subplots(figsize=(10, 6))
+            sm.qqplot(residuals, line='s', ax=ax3)
+            st.pyplot(fig3)
+
+            shapiro_stat, shapiro_p = shapiro(residuals)
+            st.write(f"**Shapiro-Wilk Test p-value:** {shapiro_p:.4f}")
+            st.write("✅ Residuals are normal" if shapiro_p > 0.05 
+                    else "❌ Residuals are NOT normal!")
+
+            # 4. Multicollinearity
+            st.write("**4. Multicollinearity Check**")
             X = pd.get_dummies(train_df[features], drop_first=True)
             X = sm.add_constant(X)
             vif_data = pd.DataFrame({
-                "Variable": X.columns,
+                "Feature": X.columns,
                 "VIF": [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
             })
             st.dataframe(vif_data.style.format({"VIF": "{:.2f}"}))
+            st.write("✅ VIF < 10: No multicollinearity" if all(vif_data["VIF"] < 10) 
+                    else "❌ VIF ≥ 10: Severe multicollinearity detected!")
 
-            # Residual diagnostics
-            st.subheader("Residual Statistics")
-            residuals = test_df[target] - model.predict(test_df)
-            resid_stats = pd.DataFrame({
-                "Statistic": ["Mean", "Std. Deviation", "Durbin-Watson", "Shapiro-Wilk p-value"],
-                "Value": [
-                    np.mean(residuals),
-                    np.std(residuals, ddof=1),
-                    durbin_watson(residuals),
-                    shapiro(residuals)[1]
-                ]
-               
-            })
-            st.dataframe(resid_stats.set_index("Statistic"))
-
-         # 1. Linearity: Actual vs. Predicted Plot
-            residuals = model.resid        # Residuals (errors)
-            fitted_values = model.predict(X)  # Predicted values
-            plt.figure(figsize=(10, 6))
-            sns.scatterplot(x=fitted_values, y="target")
-            plt.xlabel("Predicted Values")
-            plt.ylabel("Actual Values")
-            plt.title("Linearity Check: Actual vs. Predicted")
-            plt.show()
-
-            # 2. Homoscedasticity: Residuals vs. Predicted Plot
-            plt.figure(figsize=(10, 6))
-            sns.scatterplot(x=fitted_values, y=residuals)
-            plt.axhline(y=0, color='r', linestyle='--')
-            plt.xlabel("Predicted Values")
-            plt.ylabel("Residuals")
-            plt.title("Homoscedasticity Check: Residuals vs. Predicted")
-            plt.show()
-
-            # Goldfeld-Quandt Test for Homoscedasticity
-            _, p_value, _ = het_goldfeldquandt(residuals, X)
-            print(f"\nGoldfeld-Quandt Test (Homoscedasticity) p-value: {p_value:.4f}")
-            print("--> Homoscedasticity holds (constant variance)" if p_value > 0.05 else "--> Heteroscedasticity detected!")
-
-            # 3. Normality of Residuals: Q-Q Plot & Shapiro-Wilk Test
-            plt.figure(figsize=(10, 6))
-            sm.qqplot(residuals, line='s')
-            plt.title("Normality Check: Q-Q Plot of Residuals")
-            plt.show()
-
-            shapiro_stat, shapiro_p = shapiro(residuals)
-            print(f"\nShapiro-Wilk Test (Normality) p-value: {shapiro_p:.4f}")
-            print("--> Residuals are normal" if shapiro_p > 0.05 else "--> Residuals are NOT normal!")
-
-            # 4. Multicollinearity: VIF (Variance Inflation Factor)
-            vif_data = pd.DataFrame()
-            vif_data["Feature"] = X.columns
-            vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
-            print("\nVariance Inflation Factor (VIF):")
-            print(vif_data)
-            print("--> VIF < 10: No multicollinearity | VIF ≥ 10: Severe multicollinearity")
-
-            # 5. Independence: Durbin-Watson Statistic
-            print(f"\nDurbin-Watson Statistic: {model.durbinwatson:.2f}")
-            print("--> 1.5 < DW < 2.5: No autocorrelation" if 1.5 < model.durbinwatson < 2.5 else "--> Autocorrelation detected!")
+            # 5. Independence (Durbin-Watson)
+            dw = durbin_watson(residuals)
+            st.write(f"**Durbin-Watson Statistic:** {dw:.2f}")
+            st.write("✅ No autocorrelation (1.5 < DW < 2.5)" if 1.5 < dw < 2.5 
+                    else "❌ Autocorrelation detected!")
 
 else:
     st.info("Please upload a CSV file to begin")
+
+# Instructions
+st.sidebar.markdown("""
+**Assumption Checks Included:**
+1. Linearity (Actual vs Predicted plot)
+2. Homoscedasticity (Residual plot + Goldfeld-Quandt test)
+3. Normality (Q-Q plot + Shapiro-Wilk test)
+4. Multicollinearity (VIF)
+5. Independence (Durbin-Watson)
+""")
