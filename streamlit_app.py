@@ -102,7 +102,7 @@ if uploaded_file is not None:
             residuals = model.resid        # Residuals (errors)
             fitted_values = model.predict(X)  # Predicted values
             plt.figure(figsize=(10, 6))
-            sns.scatterplot(x=fitted_values, y=target)
+            sns.scatterplot(x=fitted_values, y="target")
             plt.xlabel("Predicted Values")
             plt.ylabel("Actual Values")
             plt.title("Linearity Check: Actual vs. Predicted")
