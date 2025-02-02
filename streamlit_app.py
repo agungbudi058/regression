@@ -9,9 +9,11 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.stattools import durbin_watson
 from scipy.stats import shapiro
+
 
 st.title("SPSS-style Regression Analysis (No sklearn) 📊")
 
