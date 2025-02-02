@@ -13,7 +13,7 @@ import seaborn as sns
 st.title("Complete Regression Analysis with Assumption Checks 📊")
 
 # File upload
-uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+uploaded_file = st.file_uploader("Upload CSV file, no space in variable name", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
