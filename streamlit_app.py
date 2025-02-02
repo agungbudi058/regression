@@ -1,9 +1,4 @@
 import streamlit as st
-
-st.title(" Multiple Regression")
-st.write(
-    "Rapid multiple regression and Assumption Checks"
-)
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
