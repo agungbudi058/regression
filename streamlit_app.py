@@ -93,6 +93,7 @@ if uploaded_file is not None:
                 ]
           
             st.dataframe(resid_stats.set_index("Statistic"))
+                 })
 
             # 1. Linearity: Actual vs. Predicted Plot
              st.subheader("Linearity")
@@ -102,7 +103,7 @@ if uploaded_file is not None:
             plt.ylabel("Actual Values")
             plt.title("Linearity Check: Actual vs. Predicted")
             plt.show()
-            })
+           
 
 
 else:
