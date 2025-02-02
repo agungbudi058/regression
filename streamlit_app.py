@@ -91,20 +91,8 @@ if uploaded_file is not None:
                     durbin_watson(residuals),
                     shapiro(residuals)[1]
                 ]
-          
+            })
             st.dataframe(resid_stats.set_index("Statistic"))
-                 })
-
-            # 1. Linearity: Actual vs. Predicted Plot
-             st.subheader("Linearity")
-            plt.figure(figsize=(10, 6))
-            sns.scatterplot(x=fitted_values, y=y)
-            plt.xlabel("Predicted Values")
-            plt.ylabel("Actual Values")
-            plt.title("Linearity Check: Actual vs. Predicted")
-            plt.show()
-           
-
 
 else:
     st.info("Please upload a CSV file to begin")
