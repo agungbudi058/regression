@@ -35,7 +35,7 @@ if uploaded_file is not None:
             formula += f" + {' + '.join([f'np.power({f}, {d})' for f in features for d in range(2, degree+1)])}"
 
         # Train-test split
-        test_size = st.slider("Test Size", 0.0, 0.5, 0.0)
+        test_size = st.slider("Test Size, keep 0.0 for common analyze!", 0.0, 0.5, 0.0)
         np.random.seed(42)
         test_mask = np.random.rand(len(df)) < test_size
         train_df = df[~test_mask]
