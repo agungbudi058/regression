@@ -43,7 +43,7 @@ if uploaded_file is not None:
 
         if st.button("Run Analysis"):
             # Fit OLS model
-            model = smf.ols(formula, data=train_df).fit()
+            model = smf.ols(formula).fit()
             
             
             # Full model summary
